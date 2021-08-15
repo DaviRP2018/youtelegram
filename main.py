@@ -61,12 +61,6 @@ def manage_user(message: Message) -> None:
         with open("users.json", "w") as users_json:
             users_json.write(json.dumps(users))
 
-#
-# def validate_link(link: str) -> bool:
-#     if all([link.startswith("https://"), link.find("youtube.com") != -1]):
-#         return True
-#     return False
-
 
 def clean() -> None:
     log("Cleaning tmp folder")
@@ -91,12 +85,6 @@ def main() -> None:
             manage_user(message)
 
             link = message.text
-            #
-            # if not validate_link(link):
-            #     msg = "Link inválido."
-            #     bot.send_message(message.from_user.id, msg)
-            #     log(msg)
-            #     return
 
             msg = "Link válido, aguarde."
             bot.send_message(message.from_user.id, msg)
@@ -108,11 +96,11 @@ def main() -> None:
                 filename = f"{yt.title}.mp4"
                 try:
                     audio = open(f"{SAVE_PATH}{filename}", "rb")
-                    msg = "Tá aqui o que você quer:"
-                    bot.send_message(message.from_user.id, msg)
-                    log(msg)
                     bot.send_audio(message.chat.id, audio)
                     log("Audio sent.")
+                    msg = "Tá aqui o que você quer"
+                    bot.send_message(message.from_user.id, msg)
+                    log(msg)
                     return
                 except Exception as err:
                     log(str(err), "error")
