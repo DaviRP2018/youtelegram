@@ -14,11 +14,11 @@ logger.setLevel(logging.INFO)
 
 
 TOKEN = "1706208033:AAGp3FOWnZWWivPVIJ3Tn1FKuSRqouGxYKs"
-SAVE_PATH = "/tmp/"
+SAVE_PATH = "tmp/"
 
 
 def manage_user(message: Message) -> None:
-    print(message.from_user.first_name)
+    logger.info(message.from_user.first_name)
     with open("users.json", "r") as users_json:
         data = users_json.read()
     users = json.loads(data)
