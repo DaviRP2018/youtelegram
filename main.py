@@ -3,11 +3,12 @@ import logging
 import os
 import subprocess
 from datetime import date, datetime
-from time import sleep
 
 import telebot
 from pytube import YouTube
 from telebot.types import Message
+
+SAVE_PATH = "tmp/"
 
 
 def log(message: str, level: str = "info") -> None:
@@ -49,9 +50,6 @@ def log(message: str, level: str = "info") -> None:
         logger.critical(message)
 
 
-SAVE_PATH = "tmp/"
-
-
 def manage_user(message: Message) -> None:
     log(message.from_user.first_name)
     with open("users.json", "r") as users_json:
@@ -84,28 +82,17 @@ def main() -> None:
 
         @bot.message_handler(func=lambda m: True, content_types=["text"])
         def reply_to_user(message: Message) -> None:
-            manage_user(message)
-
-            link = message.text
-
-            msg = "Link válido, aguarde."
-            bot.send_message(message.from_user.id, msg)
-            log(msg)
             try:
-                # object creation using YouTube
-                # which was imported in the beginning
+                manage_user(message)
+
+                link = message.text
+
+                msg = "Link válido, aguarde."
+                bot.send_message(message.from_user.id, msg)
+                log(msg)
+
                 yt = YouTube(link)
                 filename = f"{yt.title}.mp4"
-                try:
-                    audio = open(f"{SAVE_PATH}{filename}", "rb")
-                    bot.send_audio(message.chat.id, audio)
-                    log("Audio sent.")
-                    msg = "Tá aqui o que você quer"
-                    bot.send_message(message.from_user.id, msg)
-                    log(msg)
-                    return
-                except Exception as err:
-                    log(str(err), "error")
             except Exception as err:
                 log(str(err), "error")
                 bot.send_message(
@@ -126,10 +113,8 @@ def main() -> None:
             finally:
                 clean()
 
-        log("Starting bot...")
+        log("Bot started.")
         bot.polling(none_stop=False, interval=0, timeout=20)
-        log("Bot started...")
-
     except AssertionError as err:
         log(str(err), "error")
     except Exception as err:
@@ -137,9 +122,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # while True -> pq o bot fica parando sozinho por conta de eu nao ser donator ou algo assim
-    retries = 0
-    while retries < 10:
-        main()
-        sleep(15)
-        retries += 1
+    main()
