@@ -1,7 +1,8 @@
 import json
 import logging
+import os
 import subprocess
-from datetime import datetime, date
+from datetime import date, datetime
 from time import sleep
 
 import telebot
@@ -26,7 +27,9 @@ def log(message: str, level: str = "info") -> None:
     """
     message = "{} ==|=====> {}".format(datetime.now().time(), message)
     filename = "logs/log - %s.log" % date.today()
-    logging.basicConfig(filename=filename, format="%(asctime)s - %(levelname)s: %(message)s", filemode="w")
+    logging.basicConfig(
+        filename=filename, format="%(asctime)s - %(levelname)s: %(message)s", filemode="w"
+    )
     print(message)
     logger = logging.getLogger()
     if level == "info":
@@ -46,7 +49,6 @@ def log(message: str, level: str = "info") -> None:
         logger.critical(message)
 
 
-TOKEN = "1706208033:AAGp3FOWnZWWivPVIJ3Tn1FKuSRqouGxYKs"
 SAVE_PATH = "tmp/"
 
 
@@ -72,7 +74,7 @@ def clean() -> None:
 
 def main() -> None:
     try:
-        bot = telebot.TeleBot(TOKEN, parse_mode=None)
+        bot = telebot.TeleBot(os.environ["TOKEN"], parse_mode=None)
 
         @bot.message_handler(commands=["start", "help"])
         def send_welcome(message: Message) -> None:
@@ -106,7 +108,9 @@ def main() -> None:
                     log(str(err), "error")
             except Exception as err:
                 log(str(err), "error")
-                bot.send_message(message.from_user.id, "Erro de conexão, por favor tente novamente mais tarde.")
+                bot.send_message(
+                    message.from_user.id, "Erro de conexão, por favor tente novamente mais tarde."
+                )
             else:
                 bot.send_message(message.from_user.id, "conexão estabelecida.")
                 try:
