@@ -1,2 +1,2 @@
 pytube~=11.0.0
-python-telegram-bot~=13.7
+pyTelegramBotAPI~=3.8.2
