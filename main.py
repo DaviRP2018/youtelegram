@@ -1,16 +1,49 @@
 import json
 import logging
+import subprocess
+from datetime import datetime, date
 from time import sleep
 
 import telebot
 from pytube import YouTube
 from telebot.types import Message
 
-logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+
+def log(message: str, level: str = "info") -> None:
+    """
+    Levels of Log Message
+    There are two built-in levels of the log message.
+    Debug : These are used to give Detailed information, typically of interest only when diagnosing problems.
+    Info : These are used to Confirm that things are working as expected
+    Warning : These are used an indication that something unexpected happened, or indicative of some problem in the near
+    future
+    Error : This tells that due to a more serious problem, the software has not been able to perform some function
+    Critical : This tells serious error, indicating that the program itself may be unable to continue running
+    :param message:
+    :param level:
+    :rtype: None
+    :return:
+    """
+    message = "{} ==|=====> {}".format(datetime.now().time(), message)
+    filename = "logs/log - %s.log" % date.today()
+    logging.basicConfig(filename=filename, format="%(asctime)s - %(levelname)s: %(message)s", filemode="w")
+    print(message)
+    logger = logging.getLogger()
+    if level == "info":
+        logger.setLevel(logging.INFO)
+        logger.info(message)
+    elif level == "debug":
+        logger.setLevel(logging.DEBUG)
+        logger.debug(message)
+    elif level == "warning":
+        logger.setLevel(logging.WARNING)
+        logger.warning(message)
+    elif level == "error":
+        logger.setLevel(logging.ERROR)
+        logger.error(message)
+    elif level == "critical":
+        logger.setLevel(logging.CRITICAL)
+        logger.critical(message)
 
 
 TOKEN = "1706208033:AAGp3FOWnZWWivPVIJ3Tn1FKuSRqouGxYKs"
@@ -18,7 +51,7 @@ SAVE_PATH = "tmp/"
 
 
 def manage_user(message: Message) -> None:
-    logger.info(message.from_user.first_name)
+    log(message.from_user.first_name)
     with open("users.json", "r") as users_json:
         data = users_json.read()
     users = json.loads(data)
@@ -33,6 +66,14 @@ def validate_link(link: str) -> bool:
     if all([link.startswith("https://"), link.find("youtube.com") != -1]):
         return True
     return False
+
+
+def clean() -> None:
+    log("Cleaning tmp folder")
+    process = subprocess.Popen("rm -rf tmp/*".split(), stdout=subprocess.PIPE)
+    output, err = process.communicate()
+    log(str(output))
+    log(str(err), "error")
 
 
 def main() -> None:
@@ -52,10 +93,14 @@ def main() -> None:
             link = message.text
 
             if not validate_link(link):
-                bot.send_message(message.from_user.id, "Link inválido.")
+                msg = "Link inválido."
+                bot.send_message(message.from_user.id, msg)
+                log(msg)
                 return
 
-            bot.send_message(message.from_user.id, "Link válido, aguarde.")
+            msg = "Link válido, aguarde."
+            bot.send_message(message.from_user.id, msg)
+            log(msg)
             try:
                 # object creation using YouTube
                 # which was imported in the beginning
@@ -63,13 +108,16 @@ def main() -> None:
                 filename = f"{yt.title}.mp4"
                 try:
                     audio = open(f"{SAVE_PATH}{filename}", "rb")
-                    bot.send_message(message.from_user.id, "Tá aqui o que você quer:")
+                    msg = "Tá aqui o que você quer:"
+                    bot.send_message(message.from_user.id, msg)
+                    log(msg)
                     bot.send_audio(message.chat.id, audio)
+                    log("Audio sent.")
                     return
                 except Exception as err:
-                    logger.error(err)
+                    log(str(err), "error")
             except Exception as err:
-                logger.error(err)
+                log(str(err), "error")
                 bot.send_message(message.from_user.id, "Erro de conexão, por favor tente novamente mais tarde.")
             else:
                 bot.send_message(message.from_user.id, "conexão estabelecida.")
@@ -77,21 +125,23 @@ def main() -> None:
                     bot.send_message(message.from_user.id, "Baixando seu vídeo...")
                     yt.streams.filter(type="audio").first().download(SAVE_PATH, filename)
                 except Exception as err:
-                    logger.error(err)
+                    log(str(err), "error")
                     bot.send_message(message.from_user.id, "Error")
                 else:
                     audio = open(f"{SAVE_PATH}{filename}", "rb")
                     bot.send_message(message.from_user.id, "Tá aqui o que você quer:")
                     bot.send_audio(message.chat.id, audio)
+            finally:
+                clean()
 
-        logger.info("Starting bot...")
+        log("Starting bot...")
         bot.polling(none_stop=False, interval=0, timeout=20)
-        logger.info("Bot started...")
+        log("Bot started...")
 
     except AssertionError as err:
-        logger.error(err)
+        log(str(err), "error")
     except Exception as err:
-        logger.error(err)
+        log(str(err), "error")
 
 
 if __name__ == "__main__":
